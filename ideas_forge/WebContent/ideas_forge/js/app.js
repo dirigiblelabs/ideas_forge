@@ -11,7 +11,7 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 			  url: "/",
 		      views: {
 		      	"@": {
-		              templateUrl: 'views/master.list.html',
+		              templateUrl: 'views/master.html',
 		              controller: function(){
 		              	this.list = [{
 		              		idf_id: 1,

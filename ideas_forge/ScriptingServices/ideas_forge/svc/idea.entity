@@ -1,0 +1,15 @@
+{
+  "entityName":"idea",
+  "tableName":"IDF_IDEA",
+  "tableType":"TABLE",
+  "serviceName":"idea.js",
+  "libraryName":"idea_dao.js",
+  "specification":"idea.swagger",
+  "getEnabled":"true",
+  "postEnabled":"true",
+  "putEnabled":"true",
+  "deleteEnabled":"true",
+  "countEnabled":"true",
+  "offsetAndLimitEnabled":"true",
+  "metadataEnabled":"false"
+}
