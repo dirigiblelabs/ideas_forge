@@ -9,7 +9,7 @@ var datasource = database.getDatasource();
 
 var persistentProperties = {
 	mandatory: ["idfc_id"],
-	optional: ["comment_text", "user", "publish_date"]
+	optional: ["comment_text", "user", "publish_date", "reply_to_idfc_id"]
 };
 
 var $log = require("ideas_forge/lib/logger").logger;
@@ -36,8 +36,8 @@ exports.insert = function(item) {
 	
     var connection = datasource.getConnection();
     try {
-        var sql = "INSERT INTO IDF_COMMENT (IDFC_ID, IDFC_COMMENT_TEXT, IDFC_USER, IDFC_PUBLISH_DATE)";
-        sql += " VALUES (?,?,?,?)";
+        var sql = "INSERT INTO IDF_COMMENT (IDFC_ID, REPLY_TO_IDFC_ID, IDFC_COMMENT_TEXT, IDFC_USER, IDFC_PUBLISH_DATE)";
+        sql += " VALUES (?,?,?,?,?)";
 
         var statement = connection.prepareStatement(sql);
         item = createSQLEntity(item);
@@ -45,7 +45,8 @@ exports.insert = function(item) {
         item.boi_id = datasource.getSequence('IDF_COMMENT_IDFC_ID').next();
         
         var j = 0;
-        statement.setInt(++j, item.boi_id);
+        statement.setInt(++j, item.idfc_id);
+        statement.setInt(++j, item.replyTo);
         statement.setString(++j, item.text);
         statement.setString(++j, item.user);
         statement.setString(++j, item.publishDate);
@@ -92,6 +93,35 @@ exports.find = function(id) {
     }
 };
 
+exports.findReplies = function(commentId) {
+
+	$log.info('Finding IDF_COMMENT entity with id[' + commentId + ']');
+
+    var connection = datasource.getConnection();
+    try {
+        var items = [];
+        var sql = "SELECT * FROM IDF_COMMENT WHERE REPLY_TO_IDFC_ID=?";
+        var statement = connection.prepareStatement(sql);
+        statement.setInt(1, commentId);
+        
+        var resultSet = statement.executeQuery();
+		while (resultSet.next()) {
+            items.push(createEntity(resultSet));
+        }
+        
+        $log.info('' + items.length +' IDF_COMMENT entities in rpely to IDF_COMMENT with id['+commentId+'] found');
+        
+        return items;
+
+    } catch(e) {
+		e.errContext = sql;
+		throw e;
+    } finally {
+        connection.close();
+    }
+};
+
+
 // Read all entities, parse and return them as an array of JSON objets
 exports.list = function(ideaId, limit, offset, sort, order) {
 
@@ -106,7 +136,7 @@ exports.list = function(ideaId, limit, offset, sort, order) {
         }
         sql += " * FROM IDF_COMMENT";
         if(ideaId !== null && ideaId !== undefined){
-        	sql += " WHERE IDF_ID='" + ideaId+"'";
+        	sql += " WHERE IDFC_IDFI_ID=" + ideaId;
         }
         if (sort !== null && sort !== undefined) {
             sql += " ORDER BY " + sort;
@@ -121,7 +151,10 @@ exports.list = function(ideaId, limit, offset, sort, order) {
         var statement = connection.prepareStatement(sql);
         var resultSet = statement.executeQuery();
         while (resultSet.next()) {
-            items.push(createEntity(resultSet));
+        	var item = createEntity(resultSet);
+        	var replies = exports.findReplies(item.idfc_id);
+        	item.replies = replies;
+            items.push(item);
         }
         
         $log.info('' + items.length +' IDF_COMMENT entities found');
@@ -139,10 +172,10 @@ exports.list = function(ideaId, limit, offset, sort, order) {
 //create entity as JSON object from ResultSet current Row
 function createEntity(resultSet) {
     var entity = {};
-	entity.boi_id = resultSet.getInt("IDFC_ID");
-	entity.boi_boh_name = resultSet.getString("IDFC_COMMENT_TEXT");
-    entity.boi_name = resultSet.getString("IDFC_USER");
-    entity.boi_column = resultSet.getString("IDFC_PUBLISH_DATE");
+	entity.idfc_id = resultSet.getInt("IDFC_ID");
+	entity.text = resultSet.getString("IDFC_COMMENT_TEXT");
+    entity.user = resultSet.getString("IDFC_USER");
+    entity.publishDate = resultSet.getString("IDFC_PUBLISH_DATE");
     $log.info("Transformation from DB JSON object finished");
     return entity;
 }

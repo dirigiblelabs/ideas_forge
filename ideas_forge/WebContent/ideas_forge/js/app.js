@@ -16,7 +16,7 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		              	this.list = [{
 		              		idf_id: 1,
 		              		shortText: "idea 1",
-		              		description: "description",
+		              		description: "My corporate network works with a PAC script.(http://proxyconf.xxx.yy-ss/proxy.pac).Using the PAC script in the \"git config\" command does not work. \"git config --global http.proxy http://proxyconf.xxx.yy-ss/proxy.pac\" I got it to work by downloading the proxy.pac script (100 odd entries), selecting the most generic (usually the bottom most) proxy, and using it with my credentials in the \"git config --global http.proxy\" command.I have already asked about making git work through a proxy server: Getting git to work with a proxy server How do I pull from a Git repository through an HTTP proxy? but the above questions make no mention of PAC scripts. Is there some setting with which I can directly use the proxy.pac script?",
 		              		tags: ['a', 'b', 'c'],
 		              		user: 'Pencho',
 		              		publishDate: '10/12/2016',
@@ -25,7 +25,7 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		              		votesDown: 1,
 		              		comments: [{
 		              			idfc_id: 1,
-		              			user: 'xyz',
+		              			user: 'Stamat',
 		              			text: "cool let's do it",
 		              			publishDate: '10/12/2016'
 		              		}]
@@ -41,7 +41,7 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		              		votesDown: 4,
 		              		comments: [{
 		              			idfc_id: 2,
-		              			user: 'xyz',
+		              			user: 'Radka',
 		              			text: "cool let's do it",
 		              			publishDate: '10/12/2016'
 		              		}]

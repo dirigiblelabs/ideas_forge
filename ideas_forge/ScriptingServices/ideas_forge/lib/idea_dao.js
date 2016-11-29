@@ -130,16 +130,16 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
             sql += " " + datasource.getPaging().genTopAndStart(limit, offset);
         }
         sql += " * FROM IDF_IDEA";
-        if (entityName !== null) {
-        	sql += " WHERE shortText LIKE '" + entityName + "%%'";
+        if (entityName !== undefined && entityName !== null) {
+        	sql += " WHERE SHORT_TEXT LIKE '" + entityName + "%%'";
     	}
-        if (sort !== null) {
+        if (sort !== undefined && sort !== null) {
             sql += " ORDER BY " + sort;
         }
-        if (sort !== null && order !== null) {
+        if ((sort !== undefined && sort !== null) && (sort !== undefined && order !== null)) {
             sql += " " + order;
         }
-        if (limit !== null && offset !== null) {
+        if ((limit !== undefined && limit !== null) && (offset !== undefined && offset !== null)) {
             sql += " " + datasource.getPaging().genLimitAndOffset(limit, offset);
         }
 

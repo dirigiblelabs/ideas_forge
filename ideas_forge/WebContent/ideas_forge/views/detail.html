@@ -1,41 +1,42 @@
-<a ui-sref="list">< Back</a>
-
-<div>
-
-	<div class="idea-list-item list-group-item" style="display: flex;">
-		<div class="left rating" style="display: flex;flex-direction: column; margin-right: 10px; font-size: 2rem; line-height: 3rem">
-			<button style="font-size: 2rem;" ng-click="detailsVm.voteUp()"><i class="fa fa-thumbs-up" aria-hidden="true"></i></button>
-			<span style="align-self: center;">{{detailsVm.idea.votesUp - detailsVm.idea.votesDown}}</span>
-			<button style="font-size: 2rem;" ng-click="detailsVm.voteDown()"><i class="fa fa-thumbs-down" aria-hidden="true"></i></button>				
+<div class="idea-list-item list-group-item" style="display: flex;">
+	<a class="title" ng-bind="detailsVm.idea.shortText" ui-sref="list.entity({ideaId:detailsVm.idea.idf_id, idea: detailsVm.idea})"></a>
+	<div style="flex:1 0 auto; display: flex;">
+		<div class="rating-compartment">
+			<a ng-click="masterVm.voteUp()" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
+			<span class="rating-number">{{detailsVm.idea.votesUp - detailsVm.idea.votesDown}}</span>
+			<a ng-click="masterVm.voteDown()" href><i class="fa fa-thumbs-up fa-rotate-180" aria-hidden="true"></i></a>	
 		</div>
-		<div class="main" style="display:flex; flex-direction: column; align-content: space-between">
-			<h2 class="title" ng-bind="detailsVm.idea.shortText" style="flex: 1 0 auto"></h2>
-			<p ng-bind="detailsVm.idea.description" style="flex: 1 0 auto"></p>			
-			<div class="stats" style="flex: 1 0 auto">
-				<span ng-bind="detailsVm.idea.publishDate"></span>
-				<span ng-bind="detailsVm.idea.status"></span>
-				<span ng-bind="detailsVm.idea.comments.length"></span>
-				<span ng-bind="detailsVm.idea.user"></span>
+		<div class="main-compartment">
+			<div class="stats">
+				<div style="display:flex; flex-direction: column">
+					<i class="fa fa-user-circle-o" style="font-size: 2rem"></i>
+					<span ng-bind="detailsVm.idea.user"></span>
+				</div> | 
+				<span ng-bind="detailsVm.idea.status"></span> | 
+				<span>{{detailsVm.idea.votesUp + detailsVm.idea.votesDown}} Votes</span> | 
+				<a style="text-decoration:none; color: darkgray" href ui-sref="list.entity({ideaId:detailsVm.idea.idf_id, idea: detailsVm.idea})">{{detailsVm.idea.comments.length}} <i class="fa fa-commenting-o" style="font-size: 1.1em"></i></a>
 			</div>
+			<span style="color: #aaa" ng-bind="detailsVm.idea.publishDate"></span>
+			<p ng-bind="detailsVm.idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
 		</div>
-	</div>
+	</div>					
+</div>
 
-	<div class="list-group" ng-if="detailsVm.idea.comments.length>0" style="margin-top:20px">
-		<div ng-repeat="comment in detailsVm.idea.comments" class="list-group">
-			<div class="list-group-item" style="display:flex; flex-direction:column">
-				<span ng-bind="comment.text"></span>
-				<div>
-					<span ng-bind="comment.user"></span>
-					<span ng-bind="comment.publishDate"></span>
-				</div>
+<div class="list-group" ng-if="detailsVm.idea.comments.length>0" style="margin-top:20px">
+	<div ng-repeat="comment in detailsVm.idea.comments" class="list-group">
+		<div class="list-group-item" style="display:flex; flex-direction:column">
 			<div>
-		</div>
-		<br>
-		<div style="display:flex; flex-direction:column">
-			<span>leave a comment</span>
-			<textarea> </textarea>
-			<button ng-click="detailsVm.newComment()">Submit</button>		
-		</div>
+				<span ng-bind="comment.user"></span> | 
+				<span ng-bind="comment.publishDate"></span>
+			</div>			
+			<span ng-bind="comment.text"></span>
+		<div>
+		<a href ng-click="detailsVm.reply(comment)" style="text-decoration:none; font-weight: bold" class="pull-right">Reply</a>
 	</div>
-	
+</div>
+
+<div style="display:flex; flex-direction:column; margin: 10px 0">
+	<span style="font-size: 1em;font-weight:bold; margin-bottom: 5px">Leave a comment</span>
+	<textarea style="margin-bottom: 5px"> </textarea>
+	<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-default" ng-click="detailsVm.newComment()">Post</button>		
 </div>

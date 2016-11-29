@@ -5,19 +5,19 @@
 	
 	var arester = require("arestme/arester");
 
-	var ideaDAO = require("ideas_forge/lib/idea_dao");
-	var Idea = arester.asRestAPI(ideaDAO);
-	Idea.prototype.logger.ctx = "Idea Svc";
+	var commentDAO = require("ideas_forge/lib/comment_dao");
+	var Comment = arester.asRestAPI(commentDAO);
+	Comment.prototype.logger.ctx = "Comment Svc";
 	
-	var idea = new Idea(ideaDAO);	
+	var comment = new Comment(commentDAO);	
 	
-	(function(idea) {
+	(function(comment) {
 
 		var request = require("net/http/request");
 		var response = require("net/http/response");
 		
-		idea.service(request, response);
+		comment.service(request, response);
 		
-	})(idea);	
+	})(comment);	
 	
 })();

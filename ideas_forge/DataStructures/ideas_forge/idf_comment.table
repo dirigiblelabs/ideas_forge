@@ -12,7 +12,16 @@
       }
       ,
       {
-        "name":"idfi_id",
+        "name":"idfc_idfi_id",
+        "type":"INTEGER",
+        "length":"0",
+        "notNull":"true",
+        "primaryKey":"false",
+        "defaultValue":""
+      }
+      ,
+      {
+        "name":"reply_to_idfc_id",
         "type":"INTEGER",
         "length":"0",
         "notNull":"true",
