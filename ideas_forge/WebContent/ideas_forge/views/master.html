@@ -1,21 +1,84 @@
+<style>
+.idea-list-item {
+	display: flex;
+}
+.rating-compartment {
+	display: flex;
+	flex-direction: column; 
+	margin-right: 10px; 
+	font-size: 2rem; 
+	line-height: 4rem
+}
+.rating-compartment .fa {
+	font-size: 3.5rem;
+}
+
+.rating-compartment a {
+    text-decoration: none;
+    text-align: center;
+    line-height: 3rem;
+    color: #bbb;
+}
+
+.rating-compartment .rating-number {
+	font-size: 3rem;
+	align-self: center;
+}
+
+.idea-list-item .main-compartment {
+	display:flex;
+	flex-direction: column;
+}
+
+.main-compartment .title{
+	flex: 0 0 auto; 
+	margin-top: 0;
+	margin-bottom: 3px;
+	font-size: 2rem;
+	color: #337ab7;
+	text-decoration: none;
+}
+
+.main-compartment .stats {
+	flex: 0 0 auto; 
+	display: flex; 
+	flex-direction: row
+}
+
+.main-compartment .stats>*{
+	margin: 0 5px;
+}
+
+.main-compartment .stats> :first-child{
+	margin-left: 0;
+}
+
+.main-compartment .stats> :last-child{
+	margin-right: 0;
+}
+
+
+</style>
+
 <div class="items-list">
 	<div ng-hide="masterVm.list.length" class="nodata-text">No list</div>
 	<div class="list-group" ng-if="masterVm.list.length>0">
-	  <div class="list-group-item" ng-repeat="idea in masterVm.list|filter:detailsVm.searchText|orderBy:['votesUp','publishDate']" style="cursor: pointer;">
-		<div class="idea-list-item" style="display: flex;" ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})">
-			<div class="left rating" style="display: flex;flex-direction: column; margin-right: 10px;">
-				<button ng-click="masterVm.voteUp()"><i class="fa fa-thumbs-up" aria-hidden="true"></i> <span ng-bind="idea.votesUp"></span></button>
-				<span style="align-self: center;">{{idea.votesUp - idea.votesDown}}</span>
-				<button ng-click="masterVm.voteDown()"><i class="fa fa-thumbs-down" aria-hidden="true"></i> <span ng-bind="idea.votesDown"></span></button>				
+	  <div class="list-group-item" ng-repeat="idea in masterVm.list|filter:masterVm.searchText|orderBy:['votesUp','publishDate']">
+		<div class="idea-list-item">
+			<div class="rating-compartment">
+				<a ng-click="masterVm.voteUp()" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
+				<span class="rating-number">{{idea.votesUp - idea.votesDown}}</span>
+				<a ng-click="masterVm.voteDown()" href><i class="fa fa-thumbs-up fa-rotate-180" aria-hidden="true"></i></a>	
 			</div>
-			<div class="main" style="display:flex; flex-direction: column; align-content: space-between">
-				<span class="title" ng-bind="idea.shortText" style="flex: 1 0 auto"></span>
-				<div class="stats" style="flex: 1 0 auto">
-					<span ng-bind="idea.publishDate"></span>
-					<span ng-bind="idea.status"></span>
-					<span ng-bind="comments.length"></span>				
-					<span ng-bind="idea.user"></span>
+			<div class="main-compartment">
+				<a class="title" ng-bind="idea.shortText" ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})"></a>
+				<div class="stats">
+					<div style="display:flex; flex-direction: column">
+						<i class="fa fa-user-circle-o" style="font-size: 2rem"></i>
+						<span ng-bind="idea.user"></span>
+					</div> | <span ng-bind="idea.status"></span> | <span ng-bind="idea.publishDate"></span> | <span>{{idea.votesUp + idea.votesDown}} Votes</span> | <span>{{idea.comments.length}} Comments</span>
 				</div>
+				<p ng-bind="idea.description" style="flex: 1 0 auto; margin: 0 0 10px"></p>
 			</div>
 		</div>
 	  </div>	

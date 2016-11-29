@@ -3,13 +3,13 @@
 <div>
 
 	<div class="idea-list-item list-group-item" style="display: flex;">
-		<div class="left rating" style="display: flex;flex-direction: column; margin-right: 10px;">
-			<button ng-click="detailsVm.voteUp()"><i class="fa fa-thumbs-up" aria-hidden="true"></i> <span ng-bind="detailsVm.idea.votesUp"></span></button>
+		<div class="left rating" style="display: flex;flex-direction: column; margin-right: 10px; font-size: 2rem; line-height: 3rem">
+			<button style="font-size: 2rem;" ng-click="detailsVm.voteUp()"><i class="fa fa-thumbs-up" aria-hidden="true"></i></button>
 			<span style="align-self: center;">{{detailsVm.idea.votesUp - detailsVm.idea.votesDown}}</span>
-			<button ng-click="detailsVm.voteDown()"><i class="fa fa-thumbs-down" aria-hidden="true"></i> <span ng-bind="detailsVm.idea.votesDown"></span></button>				
+			<button style="font-size: 2rem;" ng-click="detailsVm.voteDown()"><i class="fa fa-thumbs-down" aria-hidden="true"></i></button>				
 		</div>
 		<div class="main" style="display:flex; flex-direction: column; align-content: space-between">
-			<span class="title" ng-bind="detailsVm.idea.shortText" style="flex: 1 0 auto"></span>
+			<h2 class="title" ng-bind="detailsVm.idea.shortText" style="flex: 1 0 auto"></h2>
 			<p ng-bind="detailsVm.idea.description" style="flex: 1 0 auto"></p>			
 			<div class="stats" style="flex: 1 0 auto">
 				<span ng-bind="detailsVm.idea.publishDate"></span>
