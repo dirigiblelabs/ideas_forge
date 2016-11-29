@@ -1,0 +1,23 @@
+<div class="items-list">
+	<div ng-hide="masterVm.list.length" class="nodata-text">No list</div>
+	<div class="list-group" ng-if="masterVm.list.length>0">
+	  <a class="list-group-item" ng-repeat="idea in masterVm.list|filter:detailsVm.searchText|orderBy:['votesUp','publishDate']" ui-sref="list.entity({ideaId:idea.id, idea: idea})">
+		<div class="idea-list-item">
+			<div class="left rating">
+				<a ng-click="masterVm.voteUp()"><span ng-bind="idea.votesUp"></span></a>
+				<span ng-bind="(idea.votesUp - votesDown)"></span>
+				<a ng-click="masterVm.voteDown()"><span ng-bind="idea.votesDown"></span></a>
+			</div>
+			<div class="main">
+				<span class="title" ng-bind="idea.shortText"></span>
+				<div lclass="stats">
+					<span ng-bind="idea.publishDate"></span>
+					<span ng-bind="idea.status"></span>
+					<span ng-bind="comments.length"></span>				
+					<span ng-bind="idea.user"></span>
+				<div>
+			<div>
+		</div>
+	  </div>
+	</a>
+</div>

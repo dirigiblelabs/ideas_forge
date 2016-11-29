@@ -1,0 +1,30 @@
+<a ui-sref="list">< Back</a>
+<div>
+	<div>
+		<div class="left rating">
+			<a ng-click="detailsVm.voteUp()"><span ng-bind="detailsVm.idea.votesUp"></span></a>
+			<span ng-bind="(detailsVm.idea.votesUp - detailsVm.idea.votesDown)"></span>
+			<a ng-click="detailsVm.voteDown()"><span ng-bind="detailsVm.idea.votesDown"></span></a>
+		</div>
+		<div class="main">
+			<span class="title" ng-bind="detailsVm.idea.shortText"></span>
+			<p ng-bind="detailsVm.idea.description"></p>			
+			<div class="stats">
+				<span ng-bind="detailsVm.idea.publishDate"></span>
+				<span ng-bind="detailsVm.idea.status"></span>
+				<span ng-bind="detailsVm.idea.comments.length"></span>				
+				<span ng-bind="detailsVm.idea.user"></span>
+			<div>
+		<div>	
+	</div>
+	<div class="list-group" ng-if="detailsVm.idea.comments.length>0">
+		<div ng-repeat="comment in detailsVm.idea.comments">
+			<span ng-bind="comment.text"></span>
+			<span ng-bind="comment.user"></span>
+			<span ng-bind="comment.publishDate"></span>
+		</div>
+		leave comment
+		<textarea> </textarea>
+		<button ng-click="detailsVm.newComment()">Submit</button>
+	</div>
+</div>
