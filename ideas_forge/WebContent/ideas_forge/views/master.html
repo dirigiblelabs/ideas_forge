@@ -17,11 +17,12 @@
 							<span ng-bind="idea.user"></span>
 						</div> | 
 						<span ng-bind="idea.status"></span> | 
-						<span>{{idea.votesUp + idea.votesDown}} Votes</span> | 
-						<a style="text-decoration:none; color: darkgray" href ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})">{{idea.comments.length}} <i class="fa fa-commenting-o" style="font-size: 1.1em"></i></a>
+						<span>{{parseInt(idea.votesUp, 10) + parseInt(idea.votesDown, 10) || 0}} Votes</span> | 
+						<a style="text-decoration:none; color: darkgray" href ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})">{{idea.comments.length||0}} <i class="fa fa-commenting-o" style="font-size: 1.1em"></i></a>
 					</div>
 					<span style="color: #aaa" ng-bind="idea.publishDate"></span>
 					<p ng-bind="idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
+					<a href ui-sref="list.entity({ideaId: idea.idf_id, idea: idea})" style="align-self: flex-end; font-weight: bold">Comment</a>
 				</div>
 			</div>				
 		</div>

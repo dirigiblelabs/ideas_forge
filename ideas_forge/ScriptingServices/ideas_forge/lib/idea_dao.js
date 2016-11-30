@@ -9,9 +9,10 @@ var commentsLib = require("ideas_forge/lib/comment_dao");
 var datasource = database.getDatasource();
 
 var itemsEntitySetName = "comments";
+/*	mandatory: ["idf_id", "user"],*/
 var persistentProperties = {
-	mandatory: ["idf_id", "user"],
-	optional: ["shortText", "description", "datePublished", "status", "votesUp", "votesDown"]
+	mandatory: ["idf_id"],
+	optional: ["shortText", "description", "datePublished", "status", "votesUp", "votesDown", "user"]
 };
 
 var $log = require("ideas_forge/lib/logger").logger;
@@ -51,8 +52,7 @@ exports.insert = function(entity, cascaded) {
         var statement = connection.prepareStatement(sql);
         
         var i = 0;
-        entity.boh_id = datasource.getSequence('IDF_IDEA_IDFI_ID').next();
-         
+        entity.idf_id = datasource.getSequence('IDF_IDEA_IDFI_ID').next();
         statement.setInt(++i,  entity.idf_id);
         statement.setString(++i, entity.shortText);        
         statement.setString(++i, entity.description);
@@ -193,6 +193,12 @@ function createSQLEntity(entity) {
 			entity[key] = null;
 		}
 	}
+	if(!entity.votesUp){
+		entity.votesUp = 0;
+	}
+	if(!entity.votesDown){
+		entity.votesDown = 0;
+	}	
 	$log.info("Transformation to DB JSON object finished");
 	return entity;
 }

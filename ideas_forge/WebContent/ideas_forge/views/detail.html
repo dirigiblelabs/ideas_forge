@@ -25,18 +25,27 @@
 <div class="list-group" ng-if="detailsVm.idea.comments.length>0" style="margin-top:20px">
 	<div ng-repeat="comment in detailsVm.idea.comments" class="list-group">
 		<div class="list-group-item" style="display:flex; flex-direction:column">
-			<div>
-				<span ng-bind="comment.user"></span> | 
-				<span ng-bind="comment.publishDate"></span>
-			</div>			
 			<span ng-bind="comment.text"></span>
-		<div>
-		<a href ng-click="detailsVm.reply(comment)" style="text-decoration:none; font-weight: bold" class="pull-right">Reply</a>
+			<div>
+				<span ng-bind="comment.user"></span> | <span ng-bind="comment.publishDate"></span>
+			</div>
+			<a href ng-click="detailsVm.reply(comment)" style="text-decoration:none; font-weight: bold" class="pull-right">Reply</a>
+		</div>
+		<div class="list-group" ng-if="comment.replies.length>0" style="margin-top:20px">
+			<div ng-repeat="reply in comment.replies" class="list-group-item">
+				<span ng-bind="reply.text"></span> - <span style="font-size: 0.9em;" ng-bind="reply.user"></span> | <span style="font-size: 0.9em;color:#848d95" ng-bind="reply.publishDate || 'unknown publsh date'"></span>
+				</div>						
+			</div>
+		</div>		
 	</div>
 </div>
 
 <div style="display:flex; flex-direction:column; margin: 10px 0">
 	<span style="font-size: 1em;font-weight:bold; margin-bottom: 5px">Leave a comment</span>
-	<textarea style="margin-bottom: 5px"> </textarea>
-	<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-default" ng-click="detailsVm.newComment()">Post</button>		
+	<form>
+	  <div class="form-group">
+	    <textarea  class="form-control" placeholder="" ng-model="detailsVm.comment.text" style="width:100%"></textarea>
+	  </div>
+	</form>	
+	<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-default" ng-click="detailsVm.postComment()">Post</button>	
 </div>

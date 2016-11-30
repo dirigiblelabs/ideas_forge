@@ -12,8 +12,8 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		      views: {
 		      	"@": {
 		              templateUrl: 'views/master.html',
-		              controller: function(){
-		              	this.list = [{
+		              controller: ['Idea', function(Idea){
+		              	/*this.list = [{
 		              		idf_id: 1,
 		              		shortText: "idea 1",
 		              		description: "My corporate network works with a PAC script.(http://proxyconf.xxx.yy-ss/proxy.pac).Using the PAC script in the \"git config\" command does not work. \"git config --global http.proxy http://proxyconf.xxx.yy-ss/proxy.pac\" I got it to work by downloading the proxy.pac script (100 odd entries), selecting the most generic (usually the bottom most) proxy, and using it with my credentials in the \"git config --global http.proxy\" command.I have already asked about making git work through a proxy server: Getting git to work with a proxy server How do I pull from a Git repository through an HTTP proxy? but the above questions make no mention of PAC scripts. Is there some setting with which I can directly use the proxy.pac script?",
@@ -45,12 +45,45 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		              			text: "cool let's do it",
 		              			publishDate: '10/12/2016'
 		              		}]
-		              	}];
-		              },
+		              	}];*/
+		              	
+		              	this.list = [];
+		              	var self = this;
+		              	
+		              	Idea.query({expanded:true}).$promise
+		              	.then(function(data){
+		              		self.list = data;
+		              	})
+		              	.catch(function(err){
+		              		console.error(err);
+		              		throw err;
+		              	});
+		              }],
 		              controllerAs: 'masterVm'
 		      	}
 		      }
 		    })
+		.state('list.new', {		    
+			views: {
+				"@": {
+					templateUrl: "views/comment.upsert.html",
+					controller: ['Idea', function(Idea){
+							this.idea;
+					  		this.submit = function(){
+					  			Idea.save(this.idea).$promise
+					  			.then(function(data){
+					  				console.log('idea saved');
+					  			})
+					  			.catch(function(err){
+					  				console.error('idea could not be saved');
+					  				throw err;
+					  			});
+					  		};
+						}],
+					controllerAs: 'detailsVm'								
+				}
+			}
+		})
 		.state('list.entity', {
 			url: "{ideaId}",
 			params: {
@@ -59,17 +92,28 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 			views: {
 				"@": {
 					templateUrl: "views/detail.html",				
-					controller: ['$stateParams', function($stateParams){
+					controller: ['$stateParams','Comment', function($stateParams, Comment){
 					  	if($stateParams.ideaId)
 							this.idea = $stateParams.idea;
-						this.newComment = function(){
-							console.log('new comment')
-						}
+						this.comment;
+						var self = this;
+						this.postComment = function(){
+							self.comment.idfc_idfi_id = this.idea.idf_id;
+							Comment.save(self.comment).$promise
+							.then(function(data){
+								console.log('new comment saved');	
+							})
+							.catch(function(err){
+								console.error(err);
+								throw err;
+							});
+						};
+
 					}],
 					controllerAs: 'detailsVm'				
 				}
 			}
-		})
+		})	
 		.state('list.entity.upsert', {
 			params: {
 				idea: undefined

@@ -30,10 +30,10 @@
 	}])
 	.service('Idea', ['$resource', 'ResourceSvcConfiguration', function($resource, ResourceSvcConfiguration) {
 		var cfg = angular.copy(ResourceSvcConfiguration.cfg);
-	  	return $resource('../../js/ideas_forge/svc/ideas.js/:ideaId', { ideaId:'@id' }, cfg);
+	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId', { ideaId:'@id' }, cfg);
 	}])
 	.service('ideaCount', ['$resource', function($resource) {
-	  	return $resource('../../js/ideas_forge/svc/ideas.js/count', {}, 
+	  	return $resource('../../js/ideas_forge/svc/idea.js/count', {}, 
 	  			{get: {method:'GET', params:{}, isArray:false, ignoreLoadingBar: true}});
 	}])	
 /*	.service('EntityQueryByName', ['$resource', function($resource) {
