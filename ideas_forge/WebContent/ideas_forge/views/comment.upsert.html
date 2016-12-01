@@ -6,6 +6,6 @@
 	  <div class="form-group">
 	    <label>Description</label><textarea style="width:100%;height:100%" class="form-control" placeholder="" ng-model="detailsVm.idea.description"></textarea>
 	  </div>	  
-	  <button type="submit" class="btn btn-default" ng-click="detailsVm.submit()">Post</button>
+	  <button type="submit" class="btn btn-default" ng-click="detailsVm.submit()" ng-disabled="!detailsVm.idea.shortText && !detailsVm.idea.description">Post</button>
 	</form>
 </div>

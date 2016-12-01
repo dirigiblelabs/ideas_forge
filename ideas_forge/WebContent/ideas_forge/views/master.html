@@ -1,9 +1,9 @@
 <div class="items-list">
-	<div ng-hide="masterVm.list.length" class="nodata-text">No list</div>
+	<div ng-hide="masterVm.list.length" class="nodata-text">Be the first one to submit an idea!</div>
 	<div class="list-group" ng-if="masterVm.list.length>0">
 	  <div class="list-group-item" ng-repeat="idea in masterVm.list|filter:masterVm.searchText|orderBy:['votesUp','publishDate']">
 		<div class="idea-list-item">
-			<a class="title" ng-bind="idea.shortText" ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})"></a>
+			<a class="title" ng-bind="idea.shortText" ui-sref="list.entity({ideaId:idea.idfi_id, idea: idea})"></a>
 			<div style="flex:1 0 auto; display: flex;">
 				<div class="rating-compartment">
 					<a ng-click="masterVm.voteUp()" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
@@ -22,7 +22,7 @@
 					</div>
 					<span style="color: #aaa" ng-bind="idea.publishDate"></span>
 					<p ng-bind="idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
-					<a href ui-sref="list.entity({ideaId: idea.idf_id, idea: idea})" style="align-self: flex-end; font-weight: bold">Comment</a>
+					<a href ui-sref="list.entity({ideaId: idea.idfi_id, idea: idea})" style="align-self: flex-end; font-weight: bold; text-decoration:none">Comment</a>
 				</div>
 			</div>				
 		</div>

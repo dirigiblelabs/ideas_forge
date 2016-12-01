@@ -12,7 +12,7 @@ var itemsEntitySetName = "comments";
 /*	mandatory: ["idf_id", "user"],*/
 var persistentProperties = {
 	mandatory: ["idf_id"],
-	optional: ["shortText", "description", "datePublished", "status", "votesUp", "votesDown", "user"]
+	optional: ["shortText", "description", "publishDate", "status", "votesUp", "votesDown", "user"]
 };
 
 var $log = require("ideas_forge/lib/logger").logger;
@@ -52,14 +52,23 @@ exports.insert = function(entity, cascaded) {
         var statement = connection.prepareStatement(sql);
         
         var i = 0;
-        entity.idf_id = datasource.getSequence('IDF_IDEA_IDFI_ID').next();
-        statement.setInt(++i,  entity.idf_id);
+        entity.idfi_id = datasource.getSequence('IDF_IDEA_IDFI_ID').next();
+        statement.setInt(++i,  entity.idfi_id);
         statement.setString(++i, entity.shortText);        
         statement.setString(++i, entity.description);
+
+        //TODO: move to frontend svc
+        var user = require("net/http/user");
+        entity.user = user.getName();
+        
         statement.setString(++i, entity.user);
-        statement.setString(++i, entity.publishDate);//FIXME: use date
-        statement.setString(++i, entity.status);//FIXME: use codes instead
-        statement.setInt(++i, entity.votesUp);        
+        
+        /* TODO: */
+		entity.publish_date = new Date().toString();
+        statement.setString(++i, entity.publish_date);
+
+        statement.setString(++i, entity.status);//FIXME: use codes instead        
+        statement.setInt(++i, entity.votesUp);     
         statement.setInt(++i, entity.votesDown);   
         
         statement.executeUpdate();
@@ -74,9 +83,9 @@ exports.insert = function(entity, cascaded) {
 	    	}
 		}
 
-        $log.info('IDF_IDEA entity inserted with idf_id[' +  entity.idf_id + ']');
+        $log.info('IDF_IDEA entity inserted with id[' +  entity.idfi_id + ']');
 
-        return entity.idf_id;
+        return entity.idfi_id;
 
     } catch(e) {
 		e.errContext = sql;
@@ -87,7 +96,7 @@ exports.insert = function(entity, cascaded) {
 };
 
 // Reads a single entity by id, parsed into JSON object 
-exports.find = function(id) {
+exports.find = function(id, expanded) {
 
 	$log.info('Finding IDF_IDEA entity with id[' + id + ']');
 
@@ -105,8 +114,15 @@ exports.find = function(id) {
         var resultSet = statement.executeQuery();
         if (resultSet.next()) {
             entity = createEntity(resultSet);
-			if(entity)
+			if(entity){
             	$log.info('IDF_IDEA entity with id[' + id + '] found');
+				if(expanded !== null && expanded!==undefined){
+				   var dependentItemEntities = commentsLib.list(entity.idf_id, null, null, null, null);
+				   if(dependentItemEntities) {
+				   	 entity[itemsEntitySetName] = dependentItemEntities;
+			   	   }
+				}            	
+        	}
         } 
         return entity;
     } catch(e) {
@@ -148,7 +164,7 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
         while (resultSet.next()) {
         	var entity = createEntity(resultSet);
         	if(expanded !== null && expanded!==undefined){
-			   var dependentItemEntities = commentsLib.list(entity.idf_id, null, null, null, null);
+			   var dependentItemEntities = commentsLib.list(entity.idfi_id, null, null, null, null);
 			   if(dependentItemEntities) {
 			   	 entity[itemsEntitySetName] = dependentItemEntities;
 		   	   }
@@ -170,14 +186,18 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
 //create entity as JSON object from ResultSet current Row
 function createEntity(resultSet) {
     var entity = {};
-	entity.idf_id = resultSet.getInt("IDFI_ID");
+	entity.idfi_id = resultSet.getInt("IDFI_ID");
     entity.shortText = resultSet.getString("IDFI_SHORT_TEXT");	
-    entity.descripton = resultSet.getString("IDFI_DESCRIPTION");
+    entity.description = resultSet.getString("IDFI_DESCRIPTION");
     entity.user = resultSet.getString("IDFI_USER");
-    entity.publishDate = resultSet.getString("IDFI_PUBLISH_DATE");    	
+    entity.publishDate = resultSet.getString("IDFI_PUBLISH_DATE"); 
     entity.status = resultSet.getString("IDFI_STATUS");
 	entity.votesUp = resultSet.getString("IDFI_VOTES_UP");
-	entity.votesDown = resultSet.getString("IDFI_VOTES_DOWN");
+	if(entity.votesUp === null)
+		entity.votesUp = 0;
+	entity.votesDown = resultSet.getString("IDFI_VOTES_DOWN");		
+	if(entity.votesDown === null)
+		entity.votesDown = 0;		
 	for(var key in Object.keys(entity)){
 		if(entity[key] === null)
 			entity[key] = undefined;
@@ -188,19 +208,26 @@ function createEntity(resultSet) {
 
 //Prepare a JSON object for insert into DB
 function createSQLEntity(entity) {
-	for(var key in Object.keys(entity)){
-		if(entity[key] === undefined){
-			entity[key] = null;
+	var persistentItem = {};
+	for(var i=0;i<persistentProperties.mandatory.length;i++){
+		persistentItem[persistentProperties.mandatory[i]] = entity[persistentProperties.mandatory[i]];
+	}
+	for(var i=0;i<persistentProperties.optional.length;i++){
+		if(entity[persistentProperties.optional[i]] !== undefined){
+			persistentItem[persistentProperties.optional[i]] = entity[persistentProperties.optional[i]];
+		} else {
+			persistentItem[persistentProperties.optional[i]] = null;
 		}
 	}
-	if(!entity.votesUp){
-		entity.votesUp = 0;
-	}
-	if(!entity.votesDown){
-		entity.votesDown = 0;
-	}	
+	if(persistentItem.votesUp === null){
+    	persistentItem.votesUp = 0;
+    }
+	if(persistentItem.votesDown === null){
+    	persistentItem.votesDown = 0;
+    }
+	
 	$log.info("Transformation to DB JSON object finished");
-	return entity;
+	return persistentItem;
 }
 
 // update entity from a JSON object. Returns the id of the updated entity.
@@ -326,7 +353,7 @@ exports.count = function() {
 exports.getPrimaryKeys = function() {
     var result = [];
     var i = 0;
-    result[i++] = 'IDF_ID';
+    result[i++] = 'IDFI_ID';
     if (result === 0) {
         throw new Error("There is no primary key");
     } else if(result.length > 1) {

@@ -12,8 +12,6 @@
 <link rel='stylesheet' href='//cdnjs.cloudflare.com/ajax/libs/angular-loading-bar/0.9.0/loading-bar.min.css' type='text/css' media='all' />
 
 <link rel="stylesheet" href="css/default.css">
-<link rel="stylesheet" media="min-device-width: 800px" href="css/default.css" />
-<!-- TODO: add stylesheets for different device sizes with coressponding media queries-->
 
 </head>
 
@@ -24,13 +22,11 @@
 		<div class="row-fluid page">
 		
 			<header class="page-title" style="margin: 10px 0">
-				<a style="font-weight:700; font-size: 3rem; text-decoration:none; color: black" ui-sref="list">Ideas Forge</a>
+				<a style="font-weight:700; font-size: 3rem; text-decoration:none;" ui-sref="list"><i class="fa fa-home"></i></a>
 				<button class="btn btn-primary pull-right" style="" ui-sref="list.new">Submit an idea</button>
 			</header>
 			
-			<div class="page-content">
-				<div ui-view></div>
-			</div>
+			<div class="page-content" ui-view></div>
 		</div>
 		
 	</div>

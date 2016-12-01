@@ -57,8 +57,8 @@ exports.insert = function(item) {
         statement.setString(++j, item.user);
         
         /* TODO: */
-        item.publishDate = new Date().toString();
-        statement.setString(++j, item.publishDate);
+        item.publish_date = new Date().toString();
+        statement.setString(++j, item.publish_date);
 
         statement.executeUpdate();
         
@@ -199,8 +199,10 @@ exports.list = function(ideaId, limit, offset, sort, order, expanded) {
         var resultSet = statement.executeQuery();
         while (resultSet.next()) {
         	var item = createEntity(resultSet);
-        	item.replies = exports.findReplies(item.idfc_idfi_id, item.idfc_id);
-            items.push(item);
+        	if(item.reply_to_idfc_id === undefined){
+        		item.replies = exports.findReplies(item.idfc_idfi_id, item.idfc_id);
+        		items.push(item);
+    		}
         }
         
         $log.info('' + items.length +' IDF_COMMENT entities found');
@@ -222,7 +224,7 @@ function createEntity(resultSet) {
 	entity.text = resultSet.getString("IDFC_COMMENT_TEXT");
 	entity.idfc_idfi_id = resultSet.getString("IDFC_IDFI_ID");
     entity.user = resultSet.getString("IDFC_USER");
-    entity.reply_to_idfc_id = resultSet.getString("IDFC_IDFI_ID");
+    entity.reply_to_idfc_id = resultSet.getString("IDFC_REPLY_TO_IDFC_ID");
     if(entity.reply_to_idfc_id < 0){
     	entity.reply_to_idfc_id = undefined;
     }

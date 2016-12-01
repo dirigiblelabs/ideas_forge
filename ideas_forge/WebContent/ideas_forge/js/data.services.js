@@ -13,7 +13,7 @@
 		                	var location = res.headers('Location');
 		                	if(location){
 		                		var id = location.substring(location.lastIndexOf('/')+1);
-		                		angular.extend(res.resource, { "ideaId": id });
+		                		angular.extend(res.resource, { "idfi_id": id });
 	                		} else {
 	                			$log.error('Cannot infer id after save operation. HTTP Response Header "Location" is missing: ' + location);
 	            			}
