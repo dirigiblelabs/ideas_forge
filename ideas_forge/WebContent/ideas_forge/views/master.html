@@ -1,13 +1,13 @@
 <div class="items-list">
 	<div ng-hide="masterVm.list.length" class="nodata-text">Be the first one to submit an idea!</div>
 	<div class="list-group" ng-if="masterVm.list.length>0">
-	  <div class="list-group-item" ng-repeat="idea in masterVm.list|filter:masterVm.searchText|orderBy:['votesUp','publishDate']">
+	  <div class="list-group-item" ng-repeat="idea in masterVm.list|filter:masterVm.filterList.filterText|orderBy:['-rating', '-latestPublishDate', '-participants']">
 		<div class="idea-list-item">
 			<a class="title" ng-bind="idea.shortText" ui-sref="list.entity({ideaId:idea.idfi_id, idea: idea})"></a>
 			<div style="flex:1 0 auto; display: flex;">
 				<div class="rating-compartment">
 					<a ng-click="masterVm.voteUp()" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
-					<span class="rating-number">{{idea.votesUp - idea.votesDown}}</span>
+					<span class="rating-number" ng-bind="idea.rating"></span>
 					<a ng-click="masterVm.voteDown()" href><i class="fa fa-thumbs-up fa-rotate-180" aria-hidden="true"></i></a>	
 				</div>
 				<div class="main-compartment">
@@ -16,15 +16,28 @@
 							<i class="fa fa-user-circle-o" style="font-size: 2rem"></i>
 							<span ng-bind="idea.user"></span>
 						</div> | 
-						<span ng-bind="idea.status"></span> | 
-						<span>{{parseInt(idea.votesUp, 10) + parseInt(idea.votesDown, 10) || 0}} Votes</span> | 
+						<span ng-bind="idea.status || 'open'"></span> | 
+						<span>{{idea.totalVotes}} Votes</span> | 
 						<a style="text-decoration:none; color: darkgray" href ui-sref="list.entity({ideaId:idea.idf_id, idea: idea})">{{idea.comments.length||0}} <i class="fa fa-commenting-o" style="font-size: 1.1em"></i></a>
 					</div>
-					<span style="color: #aaa" ng-bind="idea.publishDate"></span>
-					<p ng-bind="idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
-					<a href ui-sref="list.entity({ideaId: idea.idfi_id, idea: idea})" style="align-self: flex-end; font-weight: bold; text-decoration:none">Comment</a>
+					<span style="color: #aaa" title="{{idea.publishDate}}" ng-bind="idea.timeSincePublish"></span>
+
+					<p ng-bind="idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;font-size: 1.1em"></p>
+
+					<div style="flex: 1 0 auto;">
+						<span ng-if="idea.participantsCount>1" style="color: #c1c1c1">{{idea.participantsCount}} people discussing this</span>
+						<span ng-if="idea.participantsCount===1" style="color: #c1c1c1">{{idea.participantsCount}} person discussing this</span>
+						<span ng-if="idea.participantsCount===0" style="color: #c1c1c1">No one is discussing this yet. Be the first one to comment!</span>
+						<span ng-if="idea.latestPublishDate" title="{{idea.latestPublishDate}}" style="color: #c1c1c1"> | Last Update: {{idea.timeSinceLatestPublish}}</span>
+					</div>
+					
+					<div style="flex: 1 0 auto; align-self: flex-end; font-weight: bold; text-decoration:none">
+						<a ui-sref="list.entity.edit({ideaId:idea.idfi_id})" ui-sref-opts="{location:true}" ng-if="idea.editable">Edit</a>|
+						<a href ui-sref="list.entity({ideaId: idea.idfi_id, idea: idea})">Comment</a>
+					<div>
+					
 				</div>
-			</div>				
+			</div>
 		</div>
 	  </div>	
 	</div>

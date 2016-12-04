@@ -229,6 +229,8 @@ function createEntity(resultSet) {
     	entity.reply_to_idfc_id = undefined;
     }
     entity.publish_date = resultSet.getString("IDFC_PUBLISH_DATE");
+    var user = require("net/http/user");
+    entity.editable = entity.user === user.getName();    
     $log.info("Transformation from DB JSON object finished");
     return entity;
 }

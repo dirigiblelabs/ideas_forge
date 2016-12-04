@@ -9,10 +9,10 @@ var commentsLib = require("ideas_forge/lib/comment_dao");
 var datasource = database.getDatasource();
 
 var itemsEntitySetName = "comments";
-/*	mandatory: ["idf_id", "user"],*/
+
 var persistentProperties = {
-	mandatory: ["idf_id"],
-	optional: ["shortText", "description", "publishDate", "status", "votesUp", "votesDown", "user"]
+	mandatory: ["idfi_id"],
+	optional: ["shortText", "description", "publishDate", "status", "user"]
 };
 
 var $log = require("ideas_forge/lib/logger").logger;
@@ -29,7 +29,7 @@ exports.insert = function(entity, cascaded) {
 	
 	for(var i = 0; i< persistentProperties.mandatory.length; i++){
 		var propName = persistentProperties.mandatory[i];
-		if(propName==='idf_id')
+		if(propName==='idfi_id')
 			continue;//Skip validaiton check for id. It's epxected to be null on insert.
 		var propValue = entity[propName];
 		if(propValue === undefined || propValue === null){
@@ -46,8 +46,8 @@ exports.insert = function(entity, cascaded) {
     var connection = datasource.getConnection();
     try {
         var sql = "INSERT INTO IDF_IDEA (";
-        sql += "IDFI_ID, IDFI_SHORT_TEXT, IDFI_DESCRIPTION, IDFI_USER, IDFI_PUBLISH_DATE, IDFI_STATUS, IDFI_VOTES_UP, IDFI_VOTES_DOWN) "; 
-        sql += "VALUES (?,?,?,?,?,?,?,?)";
+        sql += "IDFI_ID, IDFI_SHORT_TEXT, IDFI_DESCRIPTION, IDFI_USER, IDFI_PUBLISH_DATE, IDFI_STATUS) "; 
+        sql += "VALUES (?,?,?,?,?,?)";
 
         var statement = connection.prepareStatement(sql);
         
@@ -68,8 +68,6 @@ exports.insert = function(entity, cascaded) {
         statement.setString(++i, entity.publish_date);
 
         statement.setString(++i, entity.status);//FIXME: use codes instead        
-        statement.setInt(++i, entity.votesUp);     
-        statement.setInt(++i, entity.votesDown);   
         
         statement.executeUpdate();
 
@@ -107,17 +105,18 @@ exports.find = function(id, expanded) {
     var connection = datasource.getConnection();
     try {
         var entity;
-        var sql = "SELECT * FROM IDF_IDEA WHERE " + exports.pkToSQL();
+        var sql = "SELECT * FROM IDF_IDEA_STATS WHERE " + exports.pkToSQL();
+     
         var statement = connection.prepareStatement(sql);
         statement.setInt(1, id);
-        
+
         var resultSet = statement.executeQuery();
         if (resultSet.next()) {
-            entity = createEntity(resultSet);
+        	 entity = createEntity(resultSet);
 			if(entity){
-            	$log.info('IDF_IDEA entity with id[' + id + '] found');
+            	$log.info('IDF_IDEA_STATS entity with id[' + id + '] found');
 				if(expanded !== null && expanded!==undefined){
-				   var dependentItemEntities = commentsLib.list(entity.idf_id, null, null, null, null);
+				   var dependentItemEntities = commentsLib.list(entity.idfi_id, null, null, null, null);
 				   if(dependentItemEntities) {
 				   	 entity[itemsEntitySetName] = dependentItemEntities;
 			   	   }
@@ -133,10 +132,47 @@ exports.find = function(id, expanded) {
     }
 };
 
+exports.userVoteForIdea = function(idfi_id, user){
+
+	$log.info('Getting a user['+user+'] vote for IDF_IDEA entity with idfi_id['+idfi_id+']');
+
+	if(idfi_id === undefined || idfi_id === null){
+		throw new Error('Illegal argument for idfi_id parameter:' + idfi_id);
+	}
+	
+	if(user === undefined || user === null){
+		throw new Error('Illegal argument for user parameter:' + user);
+	}	
+
+    var connection = datasource.getConnection();
+    var vote = 0;
+    try {
+        var sql = "SELECT * FROM IDF_IDEA_VOTE WHERE IDFV_IDFI_ID=? AND IDFV_USER=?";
+        var statement = connection.prepareStatement(sql);
+        statement.setInt(1, idfi_id);
+        statement.setString(2, user);
+        
+        var resultSet = statement.executeQuery();
+        if (resultSet.next()) {
+            vote = resultSet.getInt("IDFV_VOTE");
+			if(vote!==0){
+            	$log.info('Vote for IDF_IDEA entity with with id[' + idfi_id+ '] found');
+        	}
+        } 
+    } catch(e) {
+		e.errContext = sql;
+		throw e;
+    } finally {
+        connection.close();
+    }
+	
+	return vote;
+};
+
 // Read all entities, parse and return them as an array of JSON objets
 exports.list = function(limit, offset, sort, order, expanded, entityName) {
 
-	$log.info('Listing IDF_IDEA entity collection expanded['+expanded+'] with list operators: limit['+limit+'], offset['+offset+'], sort['+sort+'], order['+order+'], entityName['+entityName+']');
+	$log.info('Listing IDF_IDEA_STATS entity collection expanded['+expanded+'] with list operators: limit['+limit+'], offset['+offset+'], sort['+sort+'], order['+order+'], entityName['+entityName+']');
 	
     var connection = datasource.getConnection();
     try {
@@ -145,9 +181,9 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
         if (limit !== null && offset !== null) {
             sql += " " + datasource.getPaging().genTopAndStart(limit, offset);
         }
-        sql += " * FROM IDF_IDEA";
+        sql += " * FROM IDF_IDEA_STATS";
         if (entityName !== undefined && entityName !== null) {
-        	sql += " WHERE SHORT_TEXT LIKE '" + entityName + "%%'";
+        	sql += " WHERE IDFI_SHORT_TEXT LIKE '" + entityName + "%%'";
     	}
         if (sort !== undefined && sort !== null) {
             sql += " ORDER BY " + sort;
@@ -172,7 +208,7 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
             entities.push(entity);
         }
         
-        $log.info('' + entities.length +' IDF_IDEA entities found');
+        $log.info('' + entities.length +' IDF_IDEA_STATS entities found');
         
         return entities;
     }  catch(e) {
@@ -192,19 +228,54 @@ function createEntity(resultSet) {
     entity.user = resultSet.getString("IDFI_USER");
     entity.publishDate = resultSet.getString("IDFI_PUBLISH_DATE"); 
     entity.status = resultSet.getString("IDFI_STATUS");
-	entity.votesUp = resultSet.getString("IDFI_VOTES_UP");
-	if(entity.votesUp === null)
-		entity.votesUp = 0;
-	entity.votesDown = resultSet.getString("IDFI_VOTES_DOWN");		
-	if(entity.votesDown === null)
-		entity.votesDown = 0;		
+    entity.latestPublishDate = resultSet.getString("LATEST_PUBLISH_DATE");    
+    entity.repliesCount = resultSet.getInt("REPLIES");  
+    entity.participantsCount = resultSet.getInt("PARTICIPANTS");      
+    entity.totalVotes = resultSet.getInt("TOTAL_VOTES");    
+    entity.rating = resultSet.getInt("RATING");      
 	for(var key in Object.keys(entity)){
 		if(entity[key] === null)
 			entity[key] = undefined;
 	}	
+	var user = require("net/http/user");
+    entity.editable = entity.user === user.getName();
     $log.info("Transformation from DB JSON object finished");
     return entity;
 }
+
+exports.voteIdea = function(idfi_id, user, vote){
+	console.info("Saving user["+user+"] vote["+vote+"] for idea["+idfi_id+"]");
+	if(vote===0 || vote === undefined)
+		throw Error('Illegal Argument: vote cannot be 0 or undefined');
+
+	var connection = datasource.getConnection();
+    try {
+        var sql = "INSERT INTO IDF_IDEA_VOTE (";
+        sql += "IDFV_ID, IDFV_IDFI_ID, IDFV_USER, IDFV_VOTE) "; 
+        sql += "VALUES (?,?,?,?)";
+
+        var statement = connection.prepareStatement(sql);
+        
+        var i = 0;
+        var idfv_id = datasource.getSequence('IDF_IDEA_VOTE_IDFV_ID').next();
+        statement.setInt(++i, idfv_id);
+        statement.setInt(++i, idfi_id);        
+        statement.setString(++i, user);        
+        statement.setShort(++i, vote);
+	    
+	    statement.executeUpdate();
+    	
+    	$log.info('IDF_IDEA_VOTE entity inserted with id[' +  idfv_id + '] for IDF_IDEA entity with id['+idfi_id+']');
+
+        return idfv_id;
+
+    } catch(e) {
+		e.errContext = sql;
+		throw e;
+    } finally {
+        connection.close();
+    } 
+};
 
 //Prepare a JSON object for insert into DB
 function createSQLEntity(entity) {
@@ -218,14 +289,7 @@ function createSQLEntity(entity) {
 		} else {
 			persistentItem[persistentProperties.optional[i]] = null;
 		}
-	}
-	if(persistentItem.votesUp === null){
-    	persistentItem.votesUp = 0;
-    }
-	if(persistentItem.votesDown === null){
-    	persistentItem.votesDown = 0;
-    }
-	
+	}	
 	$log.info("Transformation to DB JSON object finished");
 	return persistentItem;
 }
@@ -233,7 +297,7 @@ function createSQLEntity(entity) {
 // update entity from a JSON object. Returns the id of the updated entity.
 exports.update = function(entity) {
 
-	$log.info('Updating IDF_IDEA entity with id[' + entity!==undefined?entity.idf_id:entity + ']');
+	$log.info('Updating IDF_IDEA entity with id[' + entity!==undefined?entity.idfi_id:entity + ']');
 
 	if(entity === undefined || entity === null){
 		throw new Error('Illegal argument: entity is ' + entity);
@@ -254,7 +318,7 @@ exports.update = function(entity) {
     
         var sql = "UPDATE IDF_IDEA";
         sql += " SET IDFI_SHORT_TEXT=?, IDFI_DESCRIPTION=?, IDFI_USER=?, IDFI_PUBLISH_DATE=?, IDFI_STATUS=?, IDFI_VOTES_UP=?, IDFI_VOTES_DOWN=?"; 
-        sql += " WHERE IDF_ID = ?";
+        sql += " WHERE IDFI_ID = ?";
         var statement = connection.prepareStatement(sql);
         var i = 0;
         statement.setString(++i, entity.shortText);        
@@ -265,11 +329,11 @@ exports.update = function(entity) {
         statement.setString(++i, entity.status);        
         statement.setInt(++i, entity.votesUp);   
         statement.setInt(++i, entity.votesDown);
-        var id = entity.idf_id;
+        var id = entity.idfi_id;
         statement.setInt(++i, id);
         statement.executeUpdate();
             
-        $log.info('IDF_IDEA entity with idf_id[' + id + '] updated');
+        $log.info('IDF_IDEA entity with idfi_id[' + id + '] updated');
         
         return this;
         
@@ -313,7 +377,7 @@ exports.remove = function(id, cascaded) {
 			}
 		}        
         
-        $log.info('IDF_IDEA entity with idf_id[' + id + '] deleted');                
+        $log.info('IDF_IDEA entity with idfi_id[' + id + '] deleted');                
         
         return this;
 

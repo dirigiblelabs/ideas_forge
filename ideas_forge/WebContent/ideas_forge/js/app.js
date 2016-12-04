@@ -1,7 +1,13 @@
 (function(angular){
 "use strict";
 
-angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.bootstrap', 'angular-loading-bar'])
+//angular'ized extenral dependencies
+angular.module('$moment', [])
+.factory('$moment', ['$window', function($window) {
+  return $window.moment;
+}]);
+
+angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router', 'ui.bootstrap', 'angular-loading-bar'])
 .config(['$stateProvider', '$urlRouterProvider', 'cfpLoadingBarProvider', function($stateProvider, $urlRouterProvider, cfpLoadingBarProvider) {
 
 		$urlRouterProvider.otherwise("/");
@@ -12,46 +18,32 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 		      views: {
 		      	"@": {
 		              templateUrl: 'views/master.html',
-		              controller: ['Idea', function(Idea){
+		              controller: ['MasterDataService', '$log', 'FilterList', function(MasterDataService, $log, FilterList){
 		              
 		              	this.list = [];
+		              	this.filterList = FilterList;
 		              	var self = this;
 		              	
-		              	Idea.query({expanded:true}).$promise
-		              	.then(function(data){
-		              		self.list = data;
-		              	})
+						MasterDataService.list()
+						.then(function(data){
+							self.list = data;
+						})
 		              	.catch(function(err){
-		              		console.error(err);
+		              		$log.error(err);
 		              		throw err;
 		              	});
 		              }],
 		              controllerAs: 'masterVm'
+		      	},
+		      	"toolbar@": {
+		              templateUrl: 'views/toolbar.html',
+		              controller: ['FilterList', function(FilterList){
+		              	this.filterList = FilterList;
+		              }],
+		              controllerAs: 'toolbarVm'
 		      	}
 		      }
 		    })
-		.state('list.new', {		    
-			views: {
-				"@": {
-					templateUrl: "views/comment.upsert.html",
-					controller: ['$state', 'Idea', function($state, Idea){
-							this.idea;
-					  		this.submit = function(){
-					  			Idea.save(this.idea).$promise
-					  			.then(function(data){
-					  				console.info('idea with id['+data.idfi_id+'] saved');
-		              				$state.go('list');
-					  			})
-					  			.catch(function(err){
-					  				console.error('idea could not be saved');
-					  				throw err;
-					  			});
-					  		};
-						}],
-					controllerAs: 'detailsVm'								
-				}
-			}
-		})
 		.state('list.entity', {
 			url: "{ideaId}",
 			params: {
@@ -60,13 +52,13 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 			views: {
 				"@": {
 					templateUrl: "views/detail.html",				
-					controller: ['$state', '$stateParams','Idea', 'Comment', function($state, $stateParams, Idea, Comment){
+					controller: ['$stateParams','$log', 'MasterDataService', 'Comment', function($stateParams, $log, MasterDataService, Comment){
 						this.comment = {};
 						var self = this;
 					  	if($stateParams.ideaId && $stateParams.idea)
 							this.idea = $stateParams.idea;
 						else {
-							Idea.get({ideaId: $stateParams.ideaId, expanded:true}).$promise
+							MasterDataService.get($stateParams.ideaId)
 							.then(function(data){
 								self.idea = data;
 							})
@@ -74,21 +66,36 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 								throw err;
 							});
 						}
-						this.postComment = function(){
-							self.comment.idfc_idfi_id = this.idea.idfi_id;
-							Comment.save(self.comment).$promise
-							.then(function(commentData){
-								console.info('Comment with id['+commentData.idfc_id+'] saved');
-								return Idea.get({ideaId: $stateParams.ideaId, expanded:true}).$promise
-								.then(function(ideaData){
-									self.idea = ideaData;
-								});
-							})
-							.catch(function(err){
-								console.error(err);
-								throw err;
+						
+						this.vote = function(vote){
+							MasterDataService.vote(self.idea, vote)
+							.then(function(data){
+								$log.info("voted: " + vote);
+								self.idea = data;
 							});
 						};
+						
+						this.postComment = function(){
+							self.comment.idfc_idfi_id = this.idea.idfi_id;
+							var operation = self.comment.idfc_id!==undefined?'update':'save';
+							Comment[operation](self.comment).$promise
+							.then(function(commentData){
+								//TODO: mixin into the resource the id from Location header upon response
+								$log.info('Comment with id['+commentData.idfc_id+'] saved');
+								return MasterDataService.get($stateParams.ideaId)
+										.then(function(data){
+											self.idea = data;
+										});
+							})
+							.catch(function(err){
+								$log.error(err);
+								throw err;
+							})
+							.finally(function(){
+								self.comment = {};
+							});
+						};
+						
 						this.replyOpen = function(comment){
 							this.comment = comment;
 							this.reply = {
@@ -98,9 +105,14 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 						};
 
 						this.replyPost = function(){
-							Comment.save(self.reply).$promise
-							.then(function(){
-								$state.go('list.entity', {ideaId: self.idea.idfi_id});
+							var upsertOperation = self.reply.idfc_id===undefined?'save':'update';
+							Comment[upsertOperation ](self.reply).$promise
+							.then(function(commentData){
+								$log.info('reply saved');
+								return MasterDataService.get($stateParams.ideaId)
+										.then(function(data){
+											self.idea = data;
+										});
 							})
 							.catch(function(err){
 								throw err;
@@ -120,26 +132,48 @@ angular.module('ideas-forge', ['ngAnimate', 'ngResource', 'ui.router', 'ui.boots
 				}
 			}
 		})	
-		.state('list.entity.upsert', {
-			params: {
-				idea: undefined
-			},
+		.state('list.entity.edit', {		    
 			views: {
 				"@": {
-					templateUrl: "views/detail.upsert.html",
-					controller: ['$stateParams', function($stateParams){
-					  	if($stateParams.ideaId)
-							this.idea = $stateParams.idea;
-						this.upsert = function(){
-							console.log('o yeah');
-						};
-					}],
-					controllerAs: 'detailsVm'				
+					templateUrl: "views/idea.upsert.html",
+					controller: ['$state', '$stateParams', '$log', 'MasterDataService', 'Idea', function($state, $stateParams, $log, MasterDataService, Idea){
+							this.idea;
+							var self = this;
+							if($stateParams.ideaId!==undefined){
+							  	if($stateParams.idea)
+									this.idea = $stateParams.idea;
+								else {
+									MasterDataService.get($stateParams.ideaId)
+									.then(function(data){
+										self.idea = data;
+									});								
+								}
+							}
+					  		this.submit = function(){
+					  			var upsertOperation = self.idea.idfi_id===undefined?'save':'update';
+					  			Idea[upsertOperation](this.idea).$promise
+					  			.then(function(data){
+					  				$log.info('idea with id['+data.idfi_id+'] saved');
+		              				$state.go('list');
+					  			})
+					  			.catch(function(err){
+					  				$log.error('idea could not be saved');
+					  				throw err;
+					  			});
+					  		};
+						}],
+					controllerAs: 'detailsVm'								
 				}
-			}			
-	   	});
+			}
+		});
 		  
 		cfpLoadingBarProvider.includeSpinner = false;
 		  
 	}])
+	.service('FilterList', [function() {
+		var _filterText;
+	  	return {
+	  		filterText: _filterText
+	  	};
+	}]);
 })(angular);

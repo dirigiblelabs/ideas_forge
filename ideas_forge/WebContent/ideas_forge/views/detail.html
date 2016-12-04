@@ -1,23 +1,31 @@
 <div class="idea-list-item list-group-item" style="display: flex;">
-	<a class="title" ng-bind="detailsVm.idea.shortText" ui-sref="list.entity({ideaId:detailsVm.idea.idf_id, idea: detailsVm.idea})"></a>
+	<a class="title" ng-bind="detailsVm.idea.shortText" ui-sref="list.entity({ideaId:detailsVm.idea.idfi_id, idea: detailsVm.idea})"></a>
 	<div style="flex:1 0 auto; display: flex;">
 		<div class="rating-compartment">
-			<a ng-click="masterVm.voteUp()" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
-			<span class="rating-number">{{detailsVm.idea.votesUp - detailsVm.idea.votesDown}}</span>
-			<a ng-click="masterVm.voteDown()" href><i class="fa fa-thumbs-up fa-rotate-180" aria-hidden="true"></i></a>	
+			<a ng-click="detailsVm.vote(1)" href><i class="fa fa-thumbs-up" aria-hidden="true"></i></a>
+			<span class="rating-number" ng-bind="detailsVm.idea.rating"></span>
+			<a ng-click="detailsVm.vote(-1)" href><i class="fa fa-thumbs-up fa-rotate-180" aria-hidden="true"></i></a>
+			<span style="font-size:0.7em; color:#c1c1c1">{{detailsVm.idea.totalVotes}} Votes</span>
 		</div>
 		<div class="main-compartment">
 			<div class="stats">
 				<div style="display:flex; flex-direction: column">
-					<i class="fa fa-user-circle-o" style="font-size: 2rem"></i>
+					<i class="fa fa-user-circle-o" style="font-size:2em"></i>
 					<span ng-bind="detailsVm.idea.user"></span>
 				</div> | 
-				<span ng-bind="detailsVm.idea.status || 'open for votes'"></span> | 
-				<span>{{parseInt(detailsVm.idea.votesUp, 10) + parseInt(detailsVm.idea.votesDown, 10) || 0}} Votes</span> | 
-				<span>{{detailsVm.idea.comments.length}}<span> <i class="fa fa-commenting-o" style="font-size: 1.1em"></i>
+				<span style="color: #aaa" title="{{detailsVm.idea.publishDate}}" ng-bind="detailsVm.idea.timeSincePublish"></span> | 
+				<span style="text-decoration:none; color: darkgray" href ui-sref="list.entity({ideaId:detailsVm.idea.idf_id, idea: detailsVm.idea})">{{detailsVm.idea.comments.length||0}} <i class="fa fa-commenting-o" style="font-size: 1.1em"></i></span>
 			</div>
-			<span style="color: #aaa" ng-bind="detailsVm.idea.publishDate"></span>
+			
 			<p ng-bind="detailsVm.idea.description" style="flex: 1 0 auto; margin: 0 0 10px;  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;font-size: 1.1em"></p>
+			
+			<div style="flex: 1 0 auto;">
+				<span ng-if="detailsVm.idea.participantsCount>1" style="color: #c1c1c1">{{detailsVm.idea.participantsCount}} people discussing this</span>
+				<span ng-if="detailsVm.idea.participantsCount===1" style="color: #c1c1c1">{{detailsVm.idea.participantsCount}} person discussing this</span>
+				<span ng-if="detailsVm.idea.participantsCount===0" style="color: #c1c1c1">No one is discussing this yet. Be the first one to comment!</span>
+				<span ng-if="detailsVm.idea.latestPublishDate" title="{{detailsVm.idea.latestPublishDate}}" style="color: #c1c1c1"> | Last Update: {{detailsVm.idea.timeSinceLatestPublish}}</span>
+			</div>
+			<a ui-sref="list.entity.edit({ideaId:detailsVm.idea.idfi_id})" ui-sref-opts="{location:false}" ng-if="detailsVm.idea.editable" style="align-self:flex-end">Edit</a>
 		</div>
 	</div>					
 </div>
@@ -27,23 +35,37 @@
 	<div class="list-group">
 		<div ng-repeat="comment in detailsVm.idea.comments" class="list-group-item" style="display:flex; flex-direction:column">
 			<div style="font-size: 0.9em;color:#848d95">
-				<span ng-bind="comment.user"></span> said <span ng-if="comment.publishDate">on</span> <span ng-bind="comment.publishDate || 'recently'">:</span>
+				<span ng-bind="comment.user"></span> said <span ng-if="comment.publishDate">on</span> <span title="{{comment.publishDate}}" ng-bind="comment.timeSincePublish || 'recently'">:</span>
 			</div>
-			<span ng-bind="comment.text" style="font-size: 1.1em"></span>
-			<a href ng-click="detailsVm.replyOpen(comment)" style="text-decoration:none; font-weight:bold" ng-hide="detailsVm.reply">Reply</a>
+			<span ng-if="detailsVm.comment !== comment" ng-bind="comment.text" style="font-size: 1.1em"></span>
+			<div ng-if="detailsVm.comment === comment">
+				<textarea class="form-control" ng-model="detailsVm.comment.text" style="width:100%"></textarea>
+				<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-primary" ng-click="detailsVm.postComment()" ng-hide="detailsVm.reply" ng-disabled="!detailsVm.comment.text">Post</button>
+			</div>
+			<a href ng-if="comment.editable && detailsVm.comment !== comment" style="align-self:flex-end" ng-click="detailsVm.comment=comment;detailsVm.reply=undefiend">Edit</a>
+			<a href ng-click="detailsVm.replyOpen(comment)" style="text-decoration:none; font-weight:bold" ng-hide="detailsVm.reply || detailsVm.comment === comment">Reply</a>
 			<div style="margin-top:20px; margin-left:40px" ng-if="comment.replies.length>0">
-				<div ng-repeat="reply in comment.replies" class="list-group-item">
-					<span ng-bind="reply.text"></span> - <span style="font-size: 0.9em;" ng-bind="reply.user"></span> | 
-					<span style="font-size: 0.9em;color:#848d95" ng-bind="reply.publishDate || 'recently'"></span>
+				<div ng-repeat="reply in comment.replies" class="list-group-item" style="border: none; border-top: 1px solid #ddd">
+					<div ng-if="detailsVm.reply !== reply">
+						<span ng-bind="reply.text"></span> <div style="display: inline-block; font-size: 0.9em; color:#848d95">- {{reply.user}} replied <span title="{{reply.publishDate}}" ng-bind="reply.timeSincePublish || 'recently'"></span>
+						<a href ng-if="reply.editable" ng-click="detailsVm.reply=reply"><i class="fa fa-pencil" style="font-size: 1.1em"></i></a></div>
+					</div>
+					<div ng-if="detailsVm.reply===reply" class="list-group-item" style="display:flex; flex-direction:column; background: #f4f4f4">
+						<textarea class="form-control" placeholder="Type your reply here" ng-model="reply.text" style="width:100%; margin: 15px 0;"></textarea>
+						<div class="button-group" style="margin: 5px 0;">
+							<button class="btn btn-default" ng-click="detailsVm.replyPost()">Post</button>
+							<button class="btn btn-default" ng-click="detailsVm.replyCancel()">Cancel</button>
+						</div>
+					</div>
 				</div>
 			</div>
-			<div ng-if="detailsVm.comment && detailsVm.comment === comment" class="list-group-item" style="margin-left:40px; display:flex; flex-direction:column; background: #f4f4f4">
+			<div ng-if="detailsVm.comment === comment && detailsVm.reply" class="list-group-item" style="margin-left:40px; display:flex; flex-direction:column; background: #f4f4f4">
 				<textarea class="form-control" placeholder="Type your reply here" ng-model="detailsVm.reply.text" style="width:100%; margin: 15px 0;"></textarea>
 				<div class="button-group" style="margin: 5px 0;">
 					<button class="btn btn-default" ng-click="detailsVm.replyPost()">Post</button>
 					<button class="btn btn-default" ng-click="detailsVm.replyCancel()">Cancel</button>
 				</div>
-			</div>			
+			</div>
 		</div>
 	</div>
 </div>
@@ -55,5 +77,5 @@
 	    <textarea  class="form-control" placeholder="Type your comment here" ng-model="detailsVm.comment.text" style="width:100%"></textarea>
 	  </div>
 	</form>	
-	<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-default" ng-click="detailsVm.postComment()" ng-hide="detailsVm.reply" ng-disabled="!detailsVm.comment.text">Post</button>	
+	<button style="flex: 1 0 auto; align-self: flex-start;" class="btn btn-primary" ng-click="detailsVm.postComment()" ng-hide="detailsVm.reply" ng-disabled="!detailsVm.comment.text">Post</button>	
 </div>
