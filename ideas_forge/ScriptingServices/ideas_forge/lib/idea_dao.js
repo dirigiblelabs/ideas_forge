@@ -5,6 +5,7 @@
 
 var database = require("db/database");
 var commentsLib = require("ideas_forge/lib/comment_dao");
+var userLib = require("net/http/user");
 
 var datasource = database.getDatasource();
 
@@ -58,8 +59,7 @@ exports.insert = function(entity, cascaded) {
         statement.setString(++i, entity.description);
 
         //TODO: move to frontend svc
-        var user = require("net/http/user");
-        entity.user = user.getName();
+        entity.user = userLib.getName();
         
         statement.setString(++i, entity.user);
         
@@ -112,7 +112,7 @@ exports.find = function(id, expanded) {
 
         var resultSet = statement.executeQuery();
         if (resultSet.next()) {
-        	 entity = createEntity(resultSet);
+        	entity = createEntity(resultSet);
 			if(entity){
             	$log.info('IDF_IDEA_STATS entity with id[' + id + '] found');
 				if(expanded !== null && expanded!==undefined){
@@ -120,6 +120,9 @@ exports.find = function(id, expanded) {
 				   if(dependentItemEntities) {
 				   	 entity[itemsEntitySetName] = dependentItemEntities;
 			   	   }
+			   	   var currentUser = userLib.getName();
+			   	   var userVote = exports.userVoteForIdea(id, currentUser);
+			   	   entity.currentUserVote = userVote;
 				}            	
         	}
         } 
@@ -204,6 +207,9 @@ exports.list = function(limit, offset, sort, order, expanded, entityName) {
 			   if(dependentItemEntities) {
 			   	 entity[itemsEntitySetName] = dependentItemEntities;
 		   	   }
+		   	   var currentUser = userLib.getName();
+			   var userVote = exports.userVoteForIdea(entity.idfi_id, currentUser);
+			   entity.currentUserVote = userVote;
 			}
             entities.push(entity);
         }
@@ -232,13 +238,12 @@ function createEntity(resultSet) {
     entity.repliesCount = resultSet.getInt("REPLIES");  
     entity.participantsCount = resultSet.getInt("PARTICIPANTS");      
     entity.totalVotes = resultSet.getInt("TOTAL_VOTES");    
-    entity.rating = resultSet.getInt("RATING");      
+    entity.rating = resultSet.getInt("RATING");  
 	for(var key in Object.keys(entity)){
 		if(entity[key] === null)
 			entity[key] = undefined;
 	}	
-	var user = require("net/http/user");
-    entity.editable = entity.user === user.getName();
+    entity.editable = entity.user === userLib.getName();
     $log.info("Transformation from DB JSON object finished");
     return entity;
 }

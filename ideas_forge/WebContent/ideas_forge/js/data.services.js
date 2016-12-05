@@ -32,13 +32,14 @@
 		var cfg = angular.copy(ResourceSvcConfiguration.cfg);
 	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId', { ideaId:'@id' }, cfg);
 	}])
-	.service('ideaCount', ['$resource', function($resource) {
+	.service('IdeaCount', ['$resource', function($resource) {
 	  	return $resource('../../js/ideas_forge/svc/idea.js/count', {}, 
 	  			{get: {method:'GET', params:{}, isArray:false, ignoreLoadingBar: true}});
 	}])	
 	.service('IdeaVote', ['$resource', function($resource) {
 	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId/vote', {ideaId:'@ideaId'}, 
-	  			{vote: {method:'POST', params:{}, isArray:false, ignoreLoadingBar: true}});
+	  			{get: {method:'GET', params:{}, isArray:false, ignoreLoadingBar: true}},
+	  			{save: {method:'POST', params:{}, isArray:false, ignoreLoadingBar: true}});
 	}])		
 	.service('Comment', ['$resource', 'ResourceSvcConfiguration', function($resource, ResourceSvcConfiguration) {
 	 	return $resource('../../js/ideas_forge/svc/comment.js/:commentId', { commentId:'@id' }, ResourceSvcConfiguration.cfg);
@@ -78,16 +79,23 @@
 	      		return formatEntity(idea);
 			});
 		};
-		var vote = function(idea, v){
-			return IdeaVote.vote({"ideaId":idea.idfi_id, "vote":v}).$promise
+		var saveVote = function(idea, v){
+			return IdeaVote.save({"ideaId":idea.idfi_id, "vote":v}).$promise
 			.then(function(){
 	      		return get(idea.idfi_id);
+			});
+		};
+		var getVote = function(idea){
+			return IdeaVote.get({"ideaId":idea.idfi_id}).$promise
+			.then(function(vote){
+	      		return vote;
 			});
 		};
 	 	return {
 	 		list: list,
 	 		get:get,
-	 		vote: vote
+	 		getVote: getVote,
+	 		saveVote: saveVote
 	 	};
 	}]);
 })(angular);

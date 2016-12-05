@@ -49,32 +49,69 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 			params: {
 				idea: undefined
 			},
+			resolve: {
+				idea: ['$stateParams', 'MasterDataService', function($stateParams, MasterDataService){
+					if($stateParams.ideaId && $stateParams.idea){
+						return $stateParams.idea;
+					} else {
+						return MasterDataService.get($stateParams.ideaId)
+						.then(function(data){
+							return data;
+						});
+					}
+				}]
+			},
 			views: {
 				"@": {
 					templateUrl: "views/detail.html",				
-					controller: ['$stateParams','$log', 'MasterDataService', 'Comment', function($stateParams, $log, MasterDataService, Comment){
-						this.comment = {};
+					controller: ['$state', '$log', 'MasterDataService', 'idea', function($state, $log, MasterDataService, idea){
+						this.idea = idea;
 						var self = this;
-					  	if($stateParams.ideaId && $stateParams.idea)
-							this.idea = $stateParams.idea;
-						else {
-							MasterDataService.get($stateParams.ideaId)
-							.then(function(data){
-								self.idea = data;
-							})
-							.catch(function(err){
-								throw err;
-							});
-						}
+						$state.go('list.entity.discussion', {ideaId: self.idea.idfi_id, idea:self.idea});  	
 						
-						this.vote = function(vote){
-							MasterDataService.vote(self.idea, vote)
+						this.saveVote = function(vote){
+							MasterDataService.saveVote(self.idea, vote)
 							.then(function(data){
-								$log.info("voted: " + vote);
+								self.currentUserVote = vote;
+								$log.info("voted: " + self.currentUserVote);
 								self.idea = data;
 							});
 						};
 						
+						this.getVote = function(){
+							MasterDataService.getVote(self.idea)
+							.then(function(vote){
+								self.currentUserVote = vote;
+							});
+						};
+
+					}],
+					controllerAs: 'detailsVm'				
+				}
+			}
+		})
+		.state('list.entity.discussion', {
+			views: {
+				"@list.entity": {
+					templateUrl: "views/discussion.html",				
+					controller: ['$stateParams','$log', 'MasterDataService', 'Comment', 'idea', function($stateParams, $log, MasterDataService, Comment, idea){
+						
+						this.comment = {};
+						this.idea = idea;
+						var self = this;
+					  	
+					  	this.openCommentForEdit = function(comment){
+					  		self.comment = comment;
+					  		self.commentEdit = true;
+					  		if(self.replyEdit)
+					  			self.replyCancel();
+					  	};
+					  	
+					  	this.cancelCommentEdit = function(){
+					  		self.comment = {};
+					  		self.commentEdit = false;
+					  	};
+					  	
 						this.postComment = function(){
 							self.comment.idfc_idfi_id = this.idea.idfi_id;
 							var operation = self.comment.idfc_id!==undefined?'update':'save';
@@ -92,16 +129,24 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 								throw err;
 							})
 							.finally(function(){
-								self.comment = {};
+								self.cancelCommentEdit();
 							});
 						};
 						
-						this.replyOpen = function(comment){
-							this.comment = comment;
-							this.reply = {
+						this.replyOpen = function(comment, reply){
+							self.comment = comment;
+							self.replyEdit = true;
+							self.reply = reply || {
 								reply_to_idfc_id: comment.idfc_id,
 								idfc_idfi_id: self.idea.idfi_id
 							};
+						};
+
+						this.replyCancel = function(){
+							delete self.reply;
+							self.replyEdit = false;
+							if(!self.commentEdit && self.comment.idfc_id!==undefined)
+								self.cancelCommentEdit();
 						};
 
 						this.replyPost = function(){
@@ -118,21 +163,16 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 								throw err;
 							})
 							.finally(function(){
-								delete self.reply;
-								self.comment = {};
+								self.replyCancel();
 							});
-						};
-						this.replyCancel = function(){
-							delete self.reply;
-							self.comment = {};
 						};
 
 					}],
-					controllerAs: 'detailsVm'				
+					controllerAs: 'vm'				
 				}
 			}
-		})	
-		.state('list.entity.edit', {		    
+		})		
+		.state('list.entity.edit', {    
 			views: {
 				"@": {
 					templateUrl: "views/idea.upsert.html",
@@ -175,5 +215,5 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 	  	return {
 	  		filterText: _filterText
 	  	};
-	}]);
+	}])
 })(angular);
