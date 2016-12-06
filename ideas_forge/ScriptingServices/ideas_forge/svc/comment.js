@@ -4,8 +4,8 @@
 "use strict";
 	
 	var arester = require("arestme/arester");
-
 	var commentDAO = require("ideas_forge/lib/comment_dao");
+	
 	var Comment = arester.asRestAPI(commentDAO);
 	Comment.prototype.logger.ctx = "Comment Svc";
 	
@@ -28,6 +28,19 @@
         	throw e;
 		}
 	};
+	
+	Comment.prototype.cfg["{id}"].put.handler = function(context, io){
+		//TODO: use isUserInRole to check privileges
+	    try{
+			Comment.prototype.cfg["{id}"].put.handler.apply(this, [context, io]);
+		} catch(e) {
+    	    var errorCode = io.response.INTERNAL_SERVER_ERROR ;
+    	    this.logger.error(errorCode, e.message, e.errContext);					
+        	this.sendError(io, errorCode, errorCode, e.message, e.errContext);
+        	throw e;
+		}
+	};	
+	
 	
 	var comment = new Comment(commentDAO);	
 	

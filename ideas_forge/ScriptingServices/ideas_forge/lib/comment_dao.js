@@ -282,7 +282,7 @@ exports.update = function(item) {
 
         var i = 0;
         statement.setString(++i, item.text);
-        statement.setString(++i, item.publishDate);
+        statement.setString(++i, item.publish_date);
         statement.setString(++i, item.user);
         var id = item.idfc_id;
         statement.setInt(++i, id);

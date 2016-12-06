@@ -30,19 +30,19 @@
 	}])
 	.service('Idea', ['$resource', 'ResourceSvcConfiguration', function($resource, ResourceSvcConfiguration) {
 		var cfg = angular.copy(ResourceSvcConfiguration.cfg);
-	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId', { ideaId:'@id' }, cfg);
+	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId', { ideaId:'@idfi_id' }, cfg);
 	}])
 	.service('IdeaCount', ['$resource', function($resource) {
 	  	return $resource('../../js/ideas_forge/svc/idea.js/count', {}, 
 	  			{get: {method:'GET', params:{}, isArray:false, ignoreLoadingBar: true}});
 	}])	
 	.service('IdeaVote', ['$resource', function($resource) {
-	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId/vote', {ideaId:'@ideaId'}, 
+	  	return $resource('../../js/ideas_forge/svc/idea.js/:ideaId/vote', {ideaId:'@idfi_id'}, 
 	  			{get: {method:'GET', params:{}, isArray:false, ignoreLoadingBar: true}},
 	  			{save: {method:'POST', params:{}, isArray:false, ignoreLoadingBar: true}});
 	}])		
 	.service('Comment', ['$resource', 'ResourceSvcConfiguration', function($resource, ResourceSvcConfiguration) {
-	 	return $resource('../../js/ideas_forge/svc/comment.js/:commentId', { commentId:'@id' }, ResourceSvcConfiguration.cfg);
+	 	return $resource('../../js/ideas_forge/svc/comment.js/:commentId', { commentId:'@idfc_id' }, ResourceSvcConfiguration.cfg);
 	}])
 	.service('MasterDataService', ['Idea', 'IdeaVote', '$moment', function(Idea, IdeaVote, $moment) {
 		

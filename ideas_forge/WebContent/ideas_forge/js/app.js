@@ -32,6 +32,15 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 		              		$log.error(err);
 		              		throw err;
 		              	});
+		              	
+						this.saveVote = function(vote){
+							MasterDataService.saveVote(self.idea, vote)
+							.then(function(data){
+								$log.info("voted: " + vote);
+								self.idea = data;
+							});
+						};
+						
 		              }],
 		              controllerAs: 'masterVm'
 		      	},
@@ -72,9 +81,8 @@ angular.module('ideas-forge', ['$moment', 'ngAnimate', 'ngResource', 'ui.router'
 						this.saveVote = function(vote){
 							MasterDataService.saveVote(self.idea, vote)
 							.then(function(data){
-								self.currentUserVote = vote;
-								$log.info("voted: " + self.currentUserVote);
-								self.idea = data;
+								$log.info("voted: " + vote);
+								self.idea = data; 
 							});
 						};
 						
